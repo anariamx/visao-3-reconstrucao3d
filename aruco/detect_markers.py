@@ -18,6 +18,9 @@ if ids is not None:
     for i in range(len(ids)):
         c = corners[i][0]
         plt.plot([c[:, 0].mean()], [c[:, 1].mean()], "+", label = "id={0}".format(ids[i]))
+        print("arUco corner (ID = {}):\n{}\n\n".format(ids[i], c))
+
+
 
 plt.legend()
 plt.show()
