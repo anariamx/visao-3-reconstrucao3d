@@ -1,4 +1,6 @@
 */assets
 */*.mp4
 */*.mkv
+*.mp4
+*.mkv
 vision-dev
