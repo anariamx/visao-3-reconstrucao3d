@@ -1,0 +1,8 @@
+pysimplegui
+numpy
+matplotlib
+numpy-stl
+opencv-python
+pandas
+opencv-contrib-python==4.6.0.66
+

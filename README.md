@@ -1,11 +1,21 @@
 # visao-3-reconstrucao3d
 Reconstrução da posição 3D durante o movimento de um robô móvel
 
+# Dúvidas
+- Como usar a distorção radial, que é uma das saídas de 'parametros.py'?
+
 ## Estrutura:
 - assets: Arquivos grande demais para o Github. Necessários ao programa.
 	- Vídeos das 4 câmeras
 - calibrate: Dados de calibração das 4 câmeras e rotina de leitura
 - aruco: Rotinas auxiliares para detecção de ArUco
+## Instruções de Instalação (Linux)
+```
+sudo apt install virtualenv
+virtualenv vision-2
+source vision-2/bin/activate
+pip3 install -r requirements.txt 
+```
 ## ATENÇÃO - MUITO IMPORTANTE
 Nos arquivos .json que contém os dados de calibração das câmeras do espaço inteligente, a matriz de rotação e translação que representam os parâmetros extrínsecos representam a transformação [R,T] que converte do referencial da câmera para o mundo.
 Para resolver o trabalho, de acordo com o modelo de projeção pinhole, vocês precisam da transformação que converte do mundo para a câmera, ou seja, do inverso da matriz fornecida. Então..... ATENÇÃO!!!!!
