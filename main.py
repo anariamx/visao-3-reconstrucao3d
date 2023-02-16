@@ -9,7 +9,6 @@
 import numpy as np
 import json
 #detect_markers
-import numpy as np
 import cv2
 from cv2 import aruco
 import matplotlib.pyplot as plt
@@ -38,6 +37,7 @@ def read_frame(img, ID):
 		len(ids)
 	except TypeError:
 		# Caso nenhum aruco seja detectado, isto impede crash. Retorna NaN
+		print("Nenhum Aruco Detectado, retornando nan")
 		void = np.zeros((4, 2))
 		void[:] = np.NaN
 		return void, 0
@@ -59,7 +59,6 @@ def read_frame(img, ID):
 		#Nenhum aruco com ID apropriado foi encontrado
 		void = np.zeros((4, 2))
 		void[:] = np.NaN
-		return void, 0
 	else:
 		print("--WARNING: Quebra de lógica")
 	
@@ -68,38 +67,55 @@ def read_frame(img, ID):
 ## ENTRADAS
 # 	P: Lista (1xn) de matrizes de projeção, onde n é o número de câmeras
 # 	points: lista (1xn) de pontos, onde n é o número de câmeras (um ponto por câmera)
-# 	found_camera:  lista True/False (1xn) indicando em quais câmeras foi detectado o aruco
+# 	found:  lista True/False (1xn) indicando em quais câmeras foi detectado o aruco
 ## SAÍDAS
 # 	B: Matriz resultante B, de dimensões variáveis
 #
-def assemble_matrix(P, points, found_camera):
-	n_found = np.count_nonzero(found_camera)	 #Número de empilhamentos
-
+def assemble_matrix(P_raw, points_raw, found):	
+	n_found = np.count_nonzero(found)	 #Número de empilhamentos, n câmeras detectando aruco com sucesso
+	
 	# Montando "coluna" de P's
-	P_collumn = P[found_camera]
+	P_collumn = P_raw[found]					 # Usa apenas Matrizes de câmeras que detectaram aruco
 	P_collumn = np.concatenate(P_collumn,axis=0) # Concatena verticalmente
 	# printdb("P_collum:\n{}".format(P_collumn))
 
+
 	# Montando Matriz de m's
-	# m = np.empty((3*n_found,n_found))
+	
+	printdb("Shape points_raw: {}".format(np.shape(points_raw)))
+	printdb("points_raw = \n{}".format(points_raw))
+	# Usa apenas pontos que foram detectados
+	points = points_raw[found].copy()
+	# printdb("points_raw = \n{}".format(points_raw))
+	printdb("points = \n{}".format(points))
+
+	# Coloca os pontos em coordenadas homogêneas
+	points = np.concatenate([points,np.ones((n_found,1))], axis=1)
+
 	# i-> linha, j-> coluna
 	for j in range(0, n_found):
-		# Empilhamos i vetores (3x1) de zeros antes dos pontos, os pontos, e então (n_found-i-1) vetores (3x1) de zeros
-		m = np.concatenate([np.zeros((3*j,1)),np.ones((3,1)), np.zeros((3*(n_found-j-1),1))], axis=0)
-		print("m:\n{}".format(m))
-
+		# Empilhamos j vetores (3x1) de zeros antes dos pontos, os pontos, e então (n_found-j-1) vetores (3x1) de zeros
+		m = np.concatenate([np.zeros((3*j,1)),np.reshape(points[j],(3,1)), np.zeros((3*(n_found-j-1),1))], axis=0)
+		
 		if j == 0:					# Concatena a coluna mais recente com as anteriores, exceto para a coluna inicial
 			m_final = m
 		else:	
 			m_final = np.concatenate([m_final,m],axis=1) # Concatenação horizontal
-		print("m_final:\n{}".format(m_final))
-	
-	
-	return 0
+		printdb("m_final:\n{}".format(m_final))
+
+	return m_final
 
 def printdb(var):
 	if debug:
+		print("------------")
 		print(var)
+
+def get_center(edges):
+	x = np.mean(edges[:,0])
+	y = np.mean(edges[:,1])
+	center = np.array([x,y])
+	printdb(center)
+	return center
 
 # Função que obtém parâmetros intrínsecos e extrínsecos de uma câmera
 def camera_parameters(file):
@@ -179,26 +195,35 @@ while True:
 		print("--PYTHON: Empty Frame 3")
 		break
 	
+	# print(img_1)
+
 	# -----4º: Ler pontos da imagem (frame) do vídeo
-	points_0, bool_found_0 = read_frame(img_0, 0)
-	points_1, bool_found_1 = read_frame(img_1, 0)
-	points_2, bool_found_2 = read_frame(img_2, 0)
-	points_3, bool_found_3 = read_frame(img_3, 0)
+	points_0_edges, bool_found_0 = read_frame(img_0, 0)
+	points_1_edges, bool_found_1 = read_frame(img_1, 0)
+	points_2_edges, bool_found_2 = read_frame(img_2, 0)
+	points_3_edges, bool_found_3 = read_frame(img_3, 0)
+
+	# Calcula o centro do Aruco de cada imagem
+	points_0 = get_center(points_0_edges)
+	points_1 = get_center(points_1_edges)
+	points_2 = get_center(points_2_edges)
+	points_3 = get_center(points_3_edges)
+
 	# Coloca pontos (numpy) numa lista
-	points = [points_0,points_1,points_2,points_3] # Não transformar em numpy ainda
+	points = np.array([points_0,points_1,points_2,points_3]) # [camera][coordenadas do ponto]
 
 	# Cria vetor True/False de "Aruco encontrado nesta câmera"
 	found_camera = np.array([bool_found_0,bool_found_1,bool_found_2,bool_found_3])
 	found_camera = found_camera > 0
 	print("Câmeras aruco detectado: {}".format(found_camera))
-
+	
 	# verifica se é possível realizar a triangulação
-	n_found = np.count_nonzero(found_camera)
-	if n_found < 2:
+	num_found = np.count_nonzero(found_camera)
+	if num_found < 2:
 		print("---PYTHON: Pulando frame por insuficiência de pontos para triangulação")
-	else:# -----5º: Montar a matriz final com pontos e Matrizes P (segundo método)
-		B = assemble_matrix(P, points[0], found_camera)
-
+	else:
+		# -----5º: Monta a matriz final com pontos e Matrizes P (segundo método do slide)
+		B = assemble_matrix(P, points, found_camera)
 
 
 
