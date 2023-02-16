@@ -38,7 +38,7 @@ def read_frame(img, ID):
 	try:
 		corners_filtered = [0 for i in range(len(ids))] 	# Inicializa vetor
 	except TypeError:
-		print("Nenhum aruco detectado nesta imagem")
+		# print("Nenhum aruco detectado nesta imagem")
 		return 0, 0
 	
 
@@ -96,11 +96,26 @@ K3, R3, T3, res3, dis3 = camera_parameters('3.json')
 # -----2º: Montar as matrizes de projeção P0,P1,P2 e P3
 # Lembre-se de inverter a matriz de transformação geométrica, [R,T]
 
-P0 = np.linalg.inv(np.dot(K0, np.hstack((R0, T0.reshape(3, 1)))))
-P1 = np.linalg.inv(np.dot(K1, np.hstack((R1, T1.reshape(3, 1)))))
-P2 = np.linalg.inv(np.dot(K2, np.hstack((R2, T2.reshape(3, 1)))))
-P3 = np.linalg.inv(np.dot(K3, np.hstack((R3, T3.reshape(3, 1)))))
+# P0 = np.linalg.inv(np.dot(K0, np.hstack((R0, T0.reshape(3, 1)))))
+# P1 = np.linalg.inv(np.dot(K1, np.hstack((R1, T1.reshape(3, 1)))))
+# P2 = np.linalg.inv(np.dot(K2, np.hstack((R2, T2.reshape(3, 1)))))
+# P3 = np.linalg.inv(np.dot(K3, np.hstack((R3, T3.reshape(3, 1)))))
 
+#placeholder block
+P0 = np.zeros((3,4))
+P0[0][0] = 1
+P0[1][1] = 1
+P0[2][2] = 1
+P1 = P0.copy()
+P1[0][0] = 2
+P2 = P0.copy()
+P2[0][0] = 3
+P3 = P0.copy()
+P3[0][0] = 4
+#placeholder block end
+
+P = [P0, P1, P2, P3]
+print("P:\n{}".format(P))
 # -----3º: Loop de leitura de frames dos vídeos
 
 file_name_0 = "camera-00.mp4"
@@ -134,24 +149,31 @@ while True:
 		break
 	
 	# -----4º: Ler pontos da imagem (frame) do vídeo
-	print("----- Video 0")
-	points_0 = read_frame(img_0, 0)
-	print("----- Video 1")
-	points_1 = read_frame(img_1, 0)
-	print("----- Video 2")
-	points_2 = read_frame(img_2, 0)
-	print("----- Video 3")
-	points_3 = read_frame(img_3, 0)
+	# print("----- Video 0")
+	points_0, bool_found_0 = read_frame(img_0, 0)
+	# print("----- Video 1")
+	points_1, bool_found_1 = read_frame(img_1, 0)
+	# print("----- Video 2")
+	points_2, bool_found_2 = read_frame(img_2, 0)
+	# print("----- Video 3")
+	points_3, bool_found_3 = read_frame(img_3, 0)
 	
+	found_camera = [bool_found_0,bool_found_1,bool_found_2,bool_found_3]
+	print(found_camera)
+
+	# -----5º: Montar a matriz final com pontos e Matrizes P (segundo método)
 	
 
-	# -----5º: Montar a matriz final com pontos e Matrizes P
-	
-	
+
+
+
+	# -----6º: Calcular a posição com base na decomposição por valor singular 
+	# np.linalg.svd(B)
+
 	# Colocar a posição calculada num vetor
 
 
-# Imprimir vetor de posições num espaço 3D
+# -----7º: Imprimir vetor de posições num espaço 3D
 
 # --FIM
 cv2.destroyAllWindows()
