@@ -13,6 +13,7 @@ import cv2
 from cv2 import aruco
 import matplotlib.pyplot as plt
 debug = 1
+path = []
 # ---Funções 
 
 # Lê pontos de interesse do arUco de um frame de um vídeo
@@ -37,7 +38,6 @@ def read_frame(img, ID):
 		len(ids)
 	except TypeError:
 		# Caso nenhum aruco seja detectado, isto impede crash. Retorna NaN
-		print("Nenhum Aruco Detectado, retornando nan")
 		void = np.zeros((4, 2))
 		void[:] = np.NaN
 		return void, 0
@@ -60,8 +60,6 @@ def read_frame(img, ID):
 		void = np.zeros((4, 2))
 		void[:] = np.NaN
 		return void, 0
-	else:
-		print("--WARNING: Quebra de lógica")
 	
 # - assemble_matrix:
 # Cria a matriz B para cálculo da triangulação
@@ -78,18 +76,12 @@ def assemble_matrix(P_raw, points_raw, found):
 	# Montando "coluna" de P's
 	P_collumn = P_raw[found]					 # Usa apenas Matrizes de câmeras que detectaram aruco
 	P_collumn = np.concatenate(P_collumn,axis=0) # Concatena verticalmente
-	# printdb("P_collum:\n{}".format(P_collumn))
 
 
-	# Montando Matriz de m's
-	
-	printdb("Shape points_raw: {}".format(np.shape(points_raw)))
-	printdb("points_raw = \n{}".format(points_raw))
+	# --Montando Matriz de m's
+
 	# Usa apenas pontos que foram detectados
 	points = points_raw[found].copy()
-	# printdb("points_raw = \n{}".format(points_raw))
-	printdb("points = \n{}".format(points))
-
 	# Coloca os pontos em coordenadas homogêneas
 	points = np.concatenate([points,np.ones((n_found,1))], axis=1)
 
@@ -102,10 +94,8 @@ def assemble_matrix(P_raw, points_raw, found):
 			m_final = m
 		else:	
 			m_final = np.concatenate([m_final,m],axis=1) # Concatenação horizontal
-		printdb("m_final:\n{}".format(m_final))
-
+		
 	B = np.concatenate([P_collumn,m_final], axis=1)
-	printdb("B = \n{}".format(B))
 	return B
 
 def printdb(var):
@@ -118,7 +108,6 @@ def get_center(edges):
 	x = np.mean(edges[:,0])
 	y = np.mean(edges[:,1])
 	center = np.array([x,y])
-	printdb(center)
 	return center
 
 # Função que obtém parâmetros intrínsecos e extrínsecos de uma câmera
@@ -199,7 +188,6 @@ while True:
 		print("--PYTHON: Empty Frame 3")
 		break
 	
-	# print(img_1)
 
 	# -----4º: Ler pontos da imagem (frame) do vídeo
 	points_0_edges, bool_found_0 = read_frame(img_0, 0)
@@ -219,7 +207,6 @@ while True:
 	# Cria vetor True/False de "Aruco encontrado nesta câmera"
 	found_camera = np.array([bool_found_0,bool_found_1,bool_found_2,bool_found_3])
 	found_camera = found_camera > 0
-	print("Câmeras aruco detectado: {}".format(found_camera))
 	
 	# verifica se é possível realizar a triangulação
 	num_found = np.count_nonzero(found_camera)
@@ -232,12 +219,28 @@ while True:
 
 
 	# -----6º: Calcular a posição com base na decomposição por valor singular 
-	# SVD = np.linalg.svd(B)
+	U, S, V = np.linalg.svd(B) #decompõe A em 3 matrizes: unitária, diagonal e transposta unitária
+	M = V[:4,-1]
+	# printdb(V)
+	# print(np.shape(M))
+	# printdb(M)
+	M = M[:]/M[3]
 
 	# Colocar a posição calculada num vetor
+	path.append(M)
+	
+path = np.array(path)
 
-
+print(path)
 # -----7º: Imprimir vetor de posições num espaço 3D
+fig = plt.figure(figsize=(10,10))
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(path[:,0], path[:,1], path[:,2],c=path[:,2], cmap='Blues')
+#ax.set_aspect('equal')
+ax.set_xlabel('X Label')
+ax.set_ylabel('Y Label')
+ax.set_zlabel('Z Label')
+plt.show()
 
 # --FIM
 cv2.destroyAllWindows()
