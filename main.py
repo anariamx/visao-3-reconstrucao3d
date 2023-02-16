@@ -112,15 +112,17 @@ def get_center(edges):
 
 # Função que obtém parâmetros intrínsecos e extrínsecos de uma câmera
 def camera_parameters(file):
-    camera_data = json.load(open(file))
-    K = np.array(camera_data['intrinsic']['doubles']).reshape(3, 3)
-    res = [camera_data['resolution']['width'],
-           camera_data['resolution']['height']]
-    tf = np.array(camera_data['extrinsic']['tf']['doubles']).reshape(4, 4)
-    R = tf[:3, :3]
-    T = tf[:3, 3].reshape(3, 1)
-    dis = np.array(camera_data['distortion']['doubles'])
-    return K, R, T, res, dis
+	camera_data = json.load(open(file))
+	K = np.array(camera_data['intrinsic']['doubles']).reshape(3, 3)
+	res = [camera_data['resolution']['width'],
+			camera_data['resolution']['height']]
+	tf = np.array(camera_data['extrinsic']['tf']['doubles']).reshape(4, 4)
+
+	R = tf[:3, :3]
+	T = tf[:3, 3].reshape(3, 1)
+	
+	dis = np.array(camera_data['distortion']['doubles'])
+	return K, R, T, res, dis
 
 
 # ------- MAIN -------
@@ -128,6 +130,7 @@ def camera_parameters(file):
 # -----1º: Obtenção das matrizes e parâmetros das câmeras
 
 # ATENÇÃO: Parâmetros que convertem da câmera para o mundo:
+
 K0, R0, T0, res0, dis0 = camera_parameters('0.json')
 K1, R1, T1, res1, dis1 = camera_parameters('1.json')
 K2, R2, T2, res2, dis2 = camera_parameters('2.json')
@@ -144,13 +147,28 @@ print('R0\n', R0, '\n')
 print('T0\n', T0, '\n')
 print('Distorcao Radial:\n', dis0)
 
+# DEBUG: Teste das matrizes RT, MT 
 
-P0 = np.linalg.inv(np.dot(K0, np.hstack((R0, T0.reshape(3, 1)))))
-# P1 = np.linalg.inv(np.dot(K1, np.hstack((R1, T1.reshape(3, 1)))))
-# P2 = np.linalg.inv(np.dot(K2, np.hstack((R2, T2.reshape(3, 1)))))
-# P3 = np.linalg.inv(np.dot(K3, np.hstack((R3, T3.reshape(3, 1)))))
+# RT = np.concatenate((R0,T0), axis = 1)
+# print('matriz RT\n', RT)
 
-print(P0)
+# MT = np.concatenate((np.concatenate((R0,T0), axis = 1), [[0, 0, 0, 1]]), axis = 0)
+
+# print('matriz MT\n', MT)
+
+# MTinv = np.linalg.inv(MT)
+# print(MTinv)
+
+# matriz de projeção 
+p = np.concatenate((np.eye(3), [[0], [0],[0]] ), axis = 1)
+print("p\n", p)
+
+P0 =(np.dot(K0, np.dot(p, (np.linalg.inv(np.concatenate((np.concatenate((R0,T0), axis = 1), [[0, 0, 0, 1]]), axis = 0))))))
+P1 =(np.dot(K1, np.dot(p, (np.linalg.inv(np.concatenate((np.concatenate((R1,T1), axis = 1), [[0, 0, 0, 1]]), axis = 0))))))
+P2 =(np.dot(K2, np.dot(p, (np.linalg.inv(np.concatenate((np.concatenate((R2,T2), axis = 1), [[0, 0, 0, 1]]), axis = 0))))))
+P3 =(np.dot(K3, np.dot(p, (np.linalg.inv(np.concatenate((np.concatenate((R3,T3), axis = 1), [[0, 0, 0, 1]]), axis = 0))))))
+
+print('P0\n',P0)
 
 # #placeholder block
 # P0 = np.zeros((3,4))
