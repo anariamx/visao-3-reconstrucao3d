@@ -96,6 +96,10 @@ K3, R3, T3, res3, dis3 = camera_parameters('3.json')
 # -----2º: Montar as matrizes de projeção P0,P1,P2 e P3
 # Lembre-se de inverter a matriz de transformação geométrica, [R,T]
 
+P0 = np.linalg.inv(np.dot(K0, np.hstack((R0, T0.reshape(3, 1)))))
+P1 = np.linalg.inv(np.dot(K1, np.hstack((R1, T1.reshape(3, 1)))))
+P2 = np.linalg.inv(np.dot(K2, np.hstack((R2, T2.reshape(3, 1)))))
+P3 = np.linalg.inv(np.dot(K3, np.hstack((R3, T3.reshape(3, 1)))))
 
 # -----3º: Loop de leitura de frames dos vídeos
 
