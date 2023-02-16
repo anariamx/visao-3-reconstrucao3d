@@ -13,54 +13,78 @@ import numpy as np
 import cv2
 from cv2 import aruco
 import matplotlib.pyplot as plt
-
-# Funções 
+debug = 1
+# ---Funções 
 
 # Lê pontos de interesse do arUco de um frame de um vídeo
 ## ENTRADAS
 # 	img: frame obtido do método 'vid.read()', onde vid é o vídeo desejado
 # 	ID: ID do aruco a ser detectado
 ## SAÍDAS
-# 	corners: vetor de pontos encontrados.
+# 	corners: vetor de pontos encontrados em formato (numpy 4x2)
 #			 Os valores são coordenadas dos cantos do aruco detectado.
-# 	n_found: Número de arucos com ID correto encontrados no frame
-
+# 			 Caso não seja encontrado aruco, retorna uma matriz com np.NaN
+# 	found: Número de arucos com ID correto encontrados no frame
 def read_frame(img, ID):
-	n_found = 0
+	found = 0
 
 	aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_50)
 	parameters =  aruco.DetectorParameters_create()
 
 	gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 	corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
-
-	# Filtro: detecta apenas os arucos com ID igual ao especificado na variável de entrada 'ID'
-	try:
-		corners_filtered = [0 for i in range(len(ids))] 	# Inicializa vetor
+	
+	try: #Verifica se algum aruco foi detectado, qualquer um:
+		len(ids)
 	except TypeError:
-		# print("Nenhum aruco detectado nesta imagem")
-		return 0, 0
-	
+		# Caso nenhum aruco seja detectado, isto impede crash. Retorna NaN
+		void = np.zeros((4, 2))
+		void[:] = np.NaN
+		return void, 0
 
+	# ---Filtro: detecta apenas os arucos com ID igual ao especificado na variável de entrada 'ID'
+	
+	
+	ids = np.reshape(ids, len(ids))		# Remodela ids para conformidade com loops
+
+	
+	# Verifica o ID de todos os arucos encontrados e retorna apenas o com ID correto
 	for i in range(0, len(ids)):
-		# print(i)
 		if ids[i] == ID:
-			corners_filtered[i] = corners[i]
-			# print("ok")
-			# print(corners_filtered[i])
-			n_found = n_found + 1
-		# else:
-		# 	print("skip.")
-	# print(corners_filtered)
-
-
-	return corners_filtered, n_found
+			found = found + 1
+			return corners[0][0], found
+			
+	# Se nenhum aruco com ID válido foi encontrado, retorna NaN:
+	if found == 0:
+		#Nenhum aruco com ID apropriado foi encontrado
+		void = np.zeros((4, 2))
+		void[:] = np.NaN
+		return void, 0
+	else:
+		print("--WARNING: Quebra de lógica")
 	
+# - assemble_matrix:
+# Cria a matriz B para cálculo da triangulação
+## ENTRADAS
+# 	P: Lista (1xn) de matrizes de projeção, onde n é o número de câmeras
+# 	points: lista (1xn) de pontos, onde n é o número de câmeras (um ponto por câmera)
+# 	found_camera:  lista True/False (1xn) indicando em quais câmeras foi detectado o aruco
+## SAÍDAS
+# 	B: Matriz resultante B, de dimensões variáveis
+#
+def assemble_matrix(P, points, found_camera):
+	n_found = np.count_nonzero(found_camera)
+	P_collumn = P[found_camera]
+	P_collumn = np.concatenate(P_collumn,axis=0) # Concatena verticalmente
+	# printdb("P_collum:\n{}".format(P_collumn))
 
+	
+	
+	return 0
 
-
-
-# 	return 0 #placeholder
+def printdb(var):
+	if debug:
+		print(var)
 
 # Função que obtém parâmetros intrínsecos e extrínsecos de uma câmera
 def camera_parameters(file):
@@ -85,14 +109,6 @@ K1, R1, T1, res1, dis1 = camera_parameters('1.json')
 K2, R2, T2, res2, dis2 = camera_parameters('2.json')
 K3, R3, T3, res3, dis3 = camera_parameters('3.json')
 
-# print('Camera 0\n')
-# print('Resolucao',res0,'\n')
-# print('Parametros intrinsecos:\n', K0, '\n')
-# print('Parametros extrinsecos:\n')
-# print('R0\n', R0, '\n')
-# print('T0\n', T0, '\n')
-# print('Distorcao Radial:\n', dis0)
-
 # -----2º: Montar as matrizes de projeção P0,P1,P2 e P3
 # Lembre-se de inverter a matriz de transformação geométrica, [R,T]
 
@@ -114,8 +130,8 @@ P3 = P0.copy()
 P3[0][0] = 4
 #placeholder block end
 
-P = [P0, P1, P2, P3]
-print("P:\n{}".format(P))
+P = np.array([P0, P1, P2, P3])
+
 # -----3º: Loop de leitura de frames dos vídeos
 
 file_name_0 = "camera-00.mp4"
@@ -136,33 +152,37 @@ while True:
 
 	#Sai do loop no caso de frames vazios em qualquer um dos vídeos (final dos vídeos)
 	if img_0 is None:
-		print("Empty Frame 0")
+		print("--PYTHON: Empty Frame 0")
 		break
 	if img_1 is None:
-		print("Empty Frame 1")
+		print("--PYTHON: Empty Frame 1")
 		break
 	if img_2 is None:
-		print("Empty Frame 2")
+		print("--PYTHON: Empty Frame 2")
 		break
 	if img_3 is None:
-		print("Empty Frame 3")
+		print("--PYTHON: Empty Frame 3")
 		break
 	
 	# -----4º: Ler pontos da imagem (frame) do vídeo
-	# print("----- Video 0")
 	points_0, bool_found_0 = read_frame(img_0, 0)
-	# print("----- Video 1")
 	points_1, bool_found_1 = read_frame(img_1, 0)
-	# print("----- Video 2")
 	points_2, bool_found_2 = read_frame(img_2, 0)
-	# print("----- Video 3")
 	points_3, bool_found_3 = read_frame(img_3, 0)
-	
-	found_camera = [bool_found_0,bool_found_1,bool_found_2,bool_found_3]
-	print(found_camera)
+	# Coloca pontos (numpy) numa lista
+	points = [points_0,points_1,points_2,points_3] # Não transformar em numpy ainda
 
-	# -----5º: Montar a matriz final com pontos e Matrizes P (segundo método)
-	
+	# Cria vetor True/False de "Aruco encontrado nesta câmera"
+	found_camera = np.array([bool_found_0,bool_found_1,bool_found_2,bool_found_3])
+	found_camera = found_camera > 0
+	print("Câmeras aruco detectado: {}".format(found_camera))
+
+	# verifica se é possível realizar a triangulação
+	n_found = np.count_nonzero(found_camera)
+	if n_found < 2:
+		print("---PYTHON: Pulando frame por insuficiência de pontos para triangulação")
+	else:# -----5º: Montar a matriz final com pontos e Matrizes P (segundo método)
+		B = assemble_matrix(P, points[0], found_camera)
 
 
 
