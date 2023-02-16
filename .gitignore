@@ -4,3 +4,4 @@
 *.mp4
 *.mkv
 vision-dev
+aruco-examples/output.py
