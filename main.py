@@ -165,7 +165,7 @@ P3 = P0.copy()
 P3[0][0] = 4
 #placeholder block end
 
-# P = np.array([P0, P1, P2, P3])
+P = np.array([P0, P1, P2, P3])
 
 # -----3º: Loop de leitura de frames dos vídeos
 
