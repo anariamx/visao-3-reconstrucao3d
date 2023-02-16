@@ -136,23 +136,34 @@ K3, R3, T3, res3, dis3 = camera_parameters('3.json')
 # -----2º: Montar as matrizes de projeção P0,P1,P2 e P3
 # Lembre-se de inverter a matriz de transformação geométrica, [R,T]
 
-# P0 = np.linalg.inv(np.dot(K0, np.hstack((R0, T0.reshape(3, 1)))))
+print('Camera 0\n')
+print('Resolucao',res0,'\n')
+print('Parametros intrinsecos:\n', K0, '\n')
+print('Parametros extrinsecos:\n')
+print('R0\n', R0, '\n')
+print('T0\n', T0, '\n')
+print('Distorcao Radial:\n', dis0)
+
+
+P0 = np.linalg.inv(np.dot(K0, np.hstack((R0, T0.reshape(3, 1)))))
 # P1 = np.linalg.inv(np.dot(K1, np.hstack((R1, T1.reshape(3, 1)))))
 # P2 = np.linalg.inv(np.dot(K2, np.hstack((R2, T2.reshape(3, 1)))))
 # P3 = np.linalg.inv(np.dot(K3, np.hstack((R3, T3.reshape(3, 1)))))
 
-#placeholder block
-P0 = np.zeros((3,4))
-P0[0][0] = 1
-P0[1][1] = 1
-P0[2][2] = 1
-P1 = P0.copy()
-P1[0][0] = 2
-P2 = P0.copy()
-P2[0][0] = 3
-P3 = P0.copy()
-P3[0][0] = 4
-#placeholder block end
+print(P0)
+
+# #placeholder block
+# P0 = np.zeros((3,4))
+# P0[0][0] = 1
+# P0[1][1] = 1
+# P0[2][2] = 1
+# P1 = P0.copy()
+# P1[0][0] = 2
+# P2 = P0.copy()
+# P2[0][0] = 3
+# P3 = P0.copy()
+# P3[0][0] = 4
+# #placeholder block end
 
 P = np.array([P0, P1, P2, P3])
 
@@ -228,11 +239,9 @@ while True:
 
 	# Colocar a posição calculada num vetor
 	path.append(M)
-	
-path = np.array(path)
 
-print(path)
 # -----7º: Imprimir vetor de posições num espaço 3D
+path = np.array(path)
 fig = plt.figure(figsize=(10,10))
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(path[:,0], path[:,1], path[:,2],c=path[:,2], cmap='Blues')
