@@ -59,6 +59,7 @@ def read_frame(img, ID):
 		#Nenhum aruco com ID apropriado foi encontrado
 		void = np.zeros((4, 2))
 		void[:] = np.NaN
+		return void, 0
 	else:
 		print("--WARNING: Quebra de lógica")
 	
@@ -111,6 +112,7 @@ def printdb(var):
 	if debug:
 		print("------------")
 		print(var)
+	return
 
 def get_center(edges):
 	x = np.mean(edges[:,0])
@@ -163,7 +165,7 @@ P3 = P0.copy()
 P3[0][0] = 4
 #placeholder block end
 
-P = np.array([P0, P1, P2, P3])
+# P = np.array([P0, P1, P2, P3])
 
 # -----3º: Loop de leitura de frames dos vídeos
 
@@ -230,7 +232,7 @@ while True:
 
 
 	# -----6º: Calcular a posição com base na decomposição por valor singular 
-	# np.linalg.svd(B)
+	# SVD = np.linalg.svd(B)
 
 	# Colocar a posição calculada num vetor
 
