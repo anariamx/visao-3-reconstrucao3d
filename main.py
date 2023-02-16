@@ -24,7 +24,7 @@ debug = 1
 # 	corners: vetor de pontos encontrados em formato (numpy 4x2)
 #			 Os valores são coordenadas dos cantos do aruco detectado.
 # 			 Caso não seja encontrado aruco, retorna uma matriz com np.NaN
-# 	found: Número de arucos com ID correto encontrados no frame
+# 	found: 1 caso tenha encontrado, 0 caso não tenha
 def read_frame(img, ID):
 	found = 0
 
@@ -73,11 +73,26 @@ def read_frame(img, ID):
 # 	B: Matriz resultante B, de dimensões variáveis
 #
 def assemble_matrix(P, points, found_camera):
-	n_found = np.count_nonzero(found_camera)
+	n_found = np.count_nonzero(found_camera)	 #Número de empilhamentos
+
+	# Montando "coluna" de P's
 	P_collumn = P[found_camera]
 	P_collumn = np.concatenate(P_collumn,axis=0) # Concatena verticalmente
 	# printdb("P_collum:\n{}".format(P_collumn))
 
+	# Montando Matriz de m's
+	# m = np.empty((3*n_found,n_found))
+	# i-> linha, j-> coluna
+	for j in range(0, n_found):
+		# Empilhamos i vetores (3x1) de zeros antes dos pontos, os pontos, e então (n_found-i-1) vetores (3x1) de zeros
+		m = np.concatenate([np.zeros((3*j,1)),np.ones((3,1)), np.zeros((3*(n_found-j-1),1))], axis=0)
+		print("m:\n{}".format(m))
+
+		if j == 0:					# Concatena a coluna mais recente com as anteriores, exceto para a coluna inicial
+			m_final = m
+		else:	
+			m_final = np.concatenate([m_final,m],axis=1) # Concatenação horizontal
+		print("m_final:\n{}".format(m_final))
 	
 	
 	return 0
