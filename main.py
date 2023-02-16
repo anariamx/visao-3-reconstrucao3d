@@ -103,7 +103,9 @@ def assemble_matrix(P_raw, points_raw, found):
 			m_final = np.concatenate([m_final,m],axis=1) # Concatenação horizontal
 		printdb("m_final:\n{}".format(m_final))
 
-	return m_final
+	B = np.concatenate([P_collumn,m_final], axis=1)
+	printdb("B = \n{}".format(B))
+	return B
 
 def printdb(var):
 	if debug:
