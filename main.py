@@ -12,8 +12,14 @@ import json
 import cv2
 from cv2 import aruco
 import matplotlib.pyplot as plt
-debug = 1
+debug = 0
 path = []
+
+path_2d_0 = []
+path_2d_1 = []
+path_2d_2 = []
+path_2d_3 = []
+
 # ---Funções 
 
 # Lê pontos de interesse do arUco de um frame de um vídeo
@@ -225,11 +231,17 @@ while True:
 	points_2_edges, bool_found_2 = read_frame(img_2, 0)
 	points_3_edges, bool_found_3 = read_frame(img_3, 0)
 
-	# Calcula o centro do Aruco de cada imagem
+		# Calcula o centro do Aruco de cada imagem
 	points_0 = get_center(points_0_edges)
 	points_1 = get_center(points_1_edges)
 	points_2 = get_center(points_2_edges)
 	points_3 = get_center(points_3_edges)
+
+	# Vetor de pontos 2d para impressão
+	path_2d_0.append(np.array(points_0))
+	path_2d_1.append(np.array(points_1))
+	path_2d_2.append(np.array(points_2))
+	path_2d_3.append(np.array(points_3))
 
 	# Coloca pontos (numpy) numa lista
 	points = np.array([points_0,points_1,points_2,points_3]) # [camera][coordenadas do ponto]
@@ -253,15 +265,30 @@ while True:
 	M = V[:4,-1]
 	# printdb(V)
 	# print(np.shape(M))
-	# printdb(M)
+	printdb("M não normalizado: \n{}".format(M))
 	M = M[:]/M[3]
-
+	printdb("M normalizado: \n{}".format(M))
 	# Colocar a posição calculada num vetor
 	path.append(M)
 
+
+
+
+path = np.array(path)
+
+path_2d_0 = np.array(path_2d_0)
+path_2d_1 = np.array(path_2d_1)
+path_2d_2 = np.array(path_2d_2)
+path_2d_3 = np.array(path_2d_3)
+
+# print(path)
+# print("path_2d_0: \n{}".format(path_2d_0))
+# print("path_2d_1: \n{}".format(path_2d_1))
+# print("path_2d_2: \n{}".format(path_2d_2))
+# print("path_2d_3: \n{}".format(path_2d_3))
+
 # -----7º: Imprimir vetor de posições num espaço 3D
 lim = [-50,50]
-path = np.array(path)
 fig = plt.figure(figsize=(8,8))
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(path[:,0], path[:,1], path[:,2],c=path[:,2], cmap='Blues')
@@ -273,6 +300,22 @@ ax.set_ylabel('Y Label')
 ax.set_ylim(lim)
 ax.set_zlabel('Z Label')
 ax.set_zlim(lim)
+
+# plt.show()
+
+# Imprime figura 2d das trajetórias
+# lim_2d = 
+
+fig_2d = plt.figure(figsize=(8,8))
+ax_2d = fig_2d.add_subplot(111)
+ax_2d.scatter(path_2d_1[:,0], path_2d_1[:,1],c=path_2d_1[:,1], cmap='Blues')
+
+ax_2d.set_title("Caminho do robô na câmera")
+ax_2d.set_xlabel('X Label')
+ax_2d.set_ylabel('Y Label')
+# ax_2d.set_xlim(lim_2d)
+# ax_2d.set_ylim(lim_2d)
+
 
 plt.show()
 
