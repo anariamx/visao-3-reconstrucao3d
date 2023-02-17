@@ -161,8 +161,9 @@ print('Distorcao Radial:\n', dis0)
 
 # matriz de projeção 
 p = np.concatenate((np.eye(3), [[0], [0],[0]] ), axis = 1)
-print("p\n", p)
+# print("p\n", p)
 
+# matriz Pi = Ki * p * [R, T]
 P0 =(np.dot(K0, np.dot(p, (np.linalg.inv(np.concatenate((np.concatenate((R0,T0), axis = 1), [[0, 0, 0, 1]]), axis = 0))))))
 P1 =(np.dot(K1, np.dot(p, (np.linalg.inv(np.concatenate((np.concatenate((R1,T1), axis = 1), [[0, 0, 0, 1]]), axis = 0))))))
 P2 =(np.dot(K2, np.dot(p, (np.linalg.inv(np.concatenate((np.concatenate((R2,T2), axis = 1), [[0, 0, 0, 1]]), axis = 0))))))
@@ -259,14 +260,20 @@ while True:
 	path.append(M)
 
 # -----7º: Imprimir vetor de posições num espaço 3D
+lim = [-50,50]
 path = np.array(path)
-fig = plt.figure(figsize=(10,10))
+fig = plt.figure(figsize=(8,8))
 ax = fig.add_subplot(111, projection='3d')
 ax.scatter(path[:,0], path[:,1], path[:,2],c=path[:,2], cmap='Blues')
 #ax.set_aspect('equal')
+ax.set_title("Caminho do robô")
 ax.set_xlabel('X Label')
+ax.set_xlim(lim)
 ax.set_ylabel('Y Label')
+ax.set_ylim(lim)
 ax.set_zlabel('Z Label')
+ax.set_zlim(lim)
+
 plt.show()
 
 # --FIM
