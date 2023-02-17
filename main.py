@@ -12,7 +12,7 @@ import json
 import cv2
 from cv2 import aruco
 import matplotlib.pyplot as plt
-debug = 0
+debug = 1
 path = []
 
 path_2d_0 = []
@@ -263,7 +263,7 @@ while True:
 	# -----6º: Calcular a posição com base na decomposição por valor singular 
 	U, S, V = np.linalg.svd(B) #decompõe A em 3 matrizes: unitária, diagonal e transposta unitária
 	M = V[:4,-1]
-	# printdb(V)
+	printdb("V = \n{}".format(V))
 	# print(np.shape(M))
 	printdb("M não normalizado: \n{}".format(M))
 	M = M[:]/M[3]
